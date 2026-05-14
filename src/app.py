@@ -11,16 +11,10 @@ from fastapi.responses import RedirectResponse
 import os
 from pathlib import Path
 
-app = FastAPI(title="Mergington High School API",
-              description="API for viewing and signing up for extracurricular activities")
 
-# Mount the static files directory
-current_dir = Path(__file__).parent
-app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
-          "static")), name="static")
-
-# In-memory activity database
-activities = {
+def get_default_activities():
+    """Return the default in-memory activity database"""
+    return {
     "Chess Club": {
         "description": "Learn strategies and compete in chess tournaments",
         "schedule": "Fridays, 3:30 PM - 5:00 PM",
@@ -78,47 +72,63 @@ activities = {
 }
 
 
-@app.get("/")
-def root():
-    return RedirectResponse(url="/static/index.html")
+def create_app(activities=None):
+    """Factory function to create FastAPI app with optional activities dict for testing"""
+    if activities is None:
+        activities = get_default_activities()
+    
+    app_instance = FastAPI(title="Mergington High School API",
+                           description="API for viewing and signing up for extracurricular activities")
+
+    # Mount the static files directory
+    current_dir = Path(__file__).parent
+    app_instance.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
+              "static")), name="static")
+
+    @app_instance.get("/")
+    def root():
+        return RedirectResponse(url="/static/index.html")
+
+    @app_instance.get("/activities")
+    def get_activities():
+        return activities
+
+    @app_instance.post("/activities/{activity_name}/signup")
+    def signup_for_activity(activity_name: str, email: str):
+        """Sign up a student for an activity"""
+        # Validate activity exists
+        if activity_name not in activities:
+            raise HTTPException(status_code=404, detail="Activity not found")
+
+        # Get the specific activity
+        activity = activities[activity_name]
+        #validate if student is nt already signed up
+        if email in activity["participants"]:
+            raise HTTPException(status_code=400, detail="Student already signed up for this activity")
+
+        # Add student
+        activity["participants"].append(email)
+        return {"message": f"Signed up {email} for {activity_name}"}
+
+    @app_instance.delete("/activities/{activity_name}/unregister")
+    def unregister_from_activity(activity_name: str, email: str):
+        """Unregister a student from an activity"""
+        # Validate activity exists
+        if activity_name not in activities:
+            raise HTTPException(status_code=404, detail="Activity not found")
+
+        # Get the specific activity
+        activity = activities[activity_name]
+        # Check if student is registered
+        if email not in activity["participants"]:
+            raise HTTPException(status_code=400, detail="Student not registered for this activity")
+
+        # Remove student
+        activity["participants"].remove(email)
+        return {"message": f"Unregistered {email} from {activity_name}"}
+
+    return app_instance
 
 
-@app.get("/activities")
-def get_activities():
-    return activities
-
-
-@app.post("/activities/{activity_name}/signup")
-def signup_for_activity(activity_name: str, email: str):
-    """Sign up a student for an activity"""
-    # Validate activity exists
-    if activity_name not in activities:
-        raise HTTPException(status_code=404, detail="Activity not found")
-
-    # Get the specific activity
-    activity = activities[activity_name]
-    #validate if student is nt already signed up
-    if email in activity["participants"]:
-        raise HTTPException(status_code=400, detail="Student already signed up for this activity")
-
-    # Add student
-    activity["participants"].append(email)
-    return {"message": f"Signed up {email} for {activity_name}"}
-
-
-@app.delete("/activities/{activity_name}/unregister")
-def unregister_from_activity(activity_name: str, email: str):
-    """Unregister a student from an activity"""
-    # Validate activity exists
-    if activity_name not in activities:
-        raise HTTPException(status_code=404, detail="Activity not found")
-
-    # Get the specific activity
-    activity = activities[activity_name]
-    # Check if student is registered
-    if email not in activity["participants"]:
-        raise HTTPException(status_code=400, detail="Student not registered for this activity")
-
-    # Remove student
-    activity["participants"].remove(email)
-    return {"message": f"Unregistered {email} from {activity_name}"}
+# Create the default app instance for production
+app = create_app()
