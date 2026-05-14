@@ -108,6 +108,67 @@ button:hover {
   background-color: #3949ab;
 }
 
+.participants {
+  margin-top: 15px;
+  padding: 12px 14px;
+  background-color: #eef3ff;
+  border-radius: 6px;
+  border: 1px solid #d0d7ff;
+}
+
+.participants-title {
+  margin-bottom: 10px;
+  font-size: 0.97rem;
+  color: #1a237e;
+}
+
+.participants-list {
+  list-style-type: none;
+  margin-left: 0;
+  color: #333;
+}
+
+.participants-list li {
+  margin-bottom: 8px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.participant-email {
+  flex: 1;
+}
+
+.delete-btn {
+  background-color: #bb6e76;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.no-participants {
+  margin-top: 12px;
+  color: #555;
+  font-style: italic;
+}
+
 .message {
   margin-top: 20px;
   padding: 10px;
